@@ -21,7 +21,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
         String path = request.getRequestURI();
         boolean publicGet = "GET".equalsIgnoreCase(request.getMethod())
-                && (path.equals("/api/news") || path.matches("/api/news/\\d+") || path.matches("/api/news/\\d+/comments"));
+                && (path.equals("/api/categories") || path.equals("/api/news") || path.matches("/api/news/\\d+") || path.matches("/api/news/\\d+/comments"));
         boolean publicAuth = path.equals("/api/auth/register") || path.equals("/api/auth/login") || path.equals("/api/auth/logout");
         if (publicAuth || publicGet) {
             return true;

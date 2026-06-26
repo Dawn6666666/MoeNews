@@ -73,8 +73,8 @@ CREATE TABLE news_comment (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO user (username, password, nickname, role, status) VALUES
-('admin', '$2a$10$K.6K5oz4YV9WVW8DPdAWcOOdAKyqtmLULmSLS1h2ZzcV1OVg1R/eq', '系统管理员', 'ADMIN', 1),
-('user', '$2a$10$K.6K5oz4YV9WVW8DPdAWcOOdAKyqtmLULmSLS1h2ZzcV1OVg1R/eq', '普通用户', 'USER', 1);
+('admin', '$2a$10$j0R.JHtEqs5J37OxGzGO9OvDZeLTiOdCe95W.eAOuc3Fd8mDAUidC', '系统管理员', 'ADMIN', 1),
+('user', '$2a$10$j0R.JHtEqs5J37OxGzGO9OvDZeLTiOdCe95W.eAOuc3Fd8mDAUidC', '普通用户', 'USER', 1);
 
 INSERT INTO news_category (name, description, sort, status) VALUES
 ('校园新闻', '校园动态与通知', 10, 1),
