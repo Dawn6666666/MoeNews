@@ -116,15 +116,6 @@ cd D:\Code\IDEA\MoeNews\frontend
 npm.cmd run build
 ```
 
-管理员登录接口测试：
-
-```powershell
-Invoke-RestMethod -Uri http://localhost:8080/api/auth/login `
-  -Method Post `
-  -ContentType 'application/json; charset=utf-8' `
-  -Body '{"username":"admin","password":"123456"}'
-```
-
 ## 运行说明
 
 - 上传文件保存在 `uploads/` 目录。
@@ -132,17 +123,3 @@ Invoke-RestMethod -Uri http://localhost:8080/api/auth/login `
 - 前端通过 `http://localhost:8080/api` 请求后端接口。
 - 后台接口路径以 `/api/admin` 开头，仅管理员可访问。
 - 普通用户可以访问新闻列表、新闻详情、评论列表，登录后可以发表评论和删除自己的评论。
-
-## Git
-
-当前远程仓库：
-
-```text
-https://github.com/Dawn6666666/MoeNews.git
-```
-
-推送代码：
-
-```powershell
-git push -u origin main
-```
