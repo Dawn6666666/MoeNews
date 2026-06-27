@@ -10,7 +10,6 @@ dist/
 frontend/dist/
 
 # Runtime uploads and logs
-uploads/
 logs/
 *.log
 
