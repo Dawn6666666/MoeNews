@@ -19,30 +19,69 @@ const message = useMessage()
 const dialog = useDialog()
 const rows = ref([])
 const categories = ref([])
+const loading = ref(false)
 const query = reactive({ page: 1, size: 10, keyword: '', categoryId: null, status: null, itemCount: 0 })
 
 const loadCategories = async () => {
-  const data = await adminApi.categories({ page: 1, size: 100, status: 1 })
-  categories.value = data.records.map((item) => ({ label: item.name, value: item.id }))
+  try {
+    const data = await adminApi.categories({ page: 1, size: 100, status: 1 })
+    categories.value = data.records.map((item) => ({ label: item.name, value: item.id }))
+  } catch (error) {
+    message.error(error.message || '加载分类列表失败')
+  }
 }
 const load = async () => {
-  const data = await adminApi.adminNews(query)
-  rows.value = data.records
-  query.itemCount = data.total
+  loading.value = true
+  try {
+    const data = await adminApi.adminNews(query)
+    rows.value = data.records
+    query.itemCount = data.total
+  } catch (error) {
+    message.error(error.message || '加载新闻列表失败')
+  } finally {
+    loading.value = false
+  }
 }
 const remove = (id) => dialog.warning({
   title: '确认删除新闻',
   content: '删除采用逻辑删除，删除后前台将不再展示该新闻。',
   positiveText: '删除',
   negativeText: '取消',
-  onPositiveClick: async () => { await adminApi.deleteNews(id); message.success('删除成功'); load() }
+  onPositiveClick: async () => {
+    try {
+      await adminApi.deleteNews(id)
+      message.success('删除成功')
+      load()
+    } catch (error) {
+      message.error(error.message || '删除失败')
+    }
+  }
 })
+
+const toggleNewsStatus = (row, status) => {
+  const action = status === 1 ? '发布' : '下架'
+  dialog.warning({
+    title: `确认${action}新闻`,
+    content: `您确定要${action}新闻“${row.title}”吗？`,
+    positiveText: '确认',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await adminApi.newsStatus(row.id, status)
+        message.success(`${action}成功`)
+        load()
+      } catch (error) {
+        message.error(error.message || `${action}失败`)
+      }
+    }
+  })
+}
 
 // 格式化标签与按钮样式以匹配 Soybean Admin 柔和风格并整合微图标
 const columns = [
   { title: 'ID', key: 'id', width: 70 },
-  { title: '标题', key: 'title' },
-  { title: '分类', key: 'categoryName', width: 120 },
+  { title: '标题', key: 'title', ellipsis: { tooltip: true } },
+  { title: '分类', key: 'categoryName', width: 120, ellipsis: { tooltip: true } },
   { title: '浏览量', key: 'viewCount', width: 90 },
   { 
     title: '状态', 
@@ -58,20 +97,20 @@ const columns = [
       )
     } 
   },
-  { title: '操作', key: 'actions', width: 340, render: (row) => h(NSpace, null, { default: () => [
-    h(NButton, { size: 'small', type: 'primary', secondary: true, round: true, onClick: () => router.push(`/admin/news/edit/${row.id}`) }, { 
+  { title: '操作', key: 'actions', width: 310, fixed: 'right', render: (row) => h(NSpace, { size: 4, wrap: false }, { default: () => [
+    h(NButton, { size: 'small', type: 'primary', quaternary: true, onClick: () => router.push(`/admin/news/edit/${row.id}`) }, { 
       default: () => '编辑',
       icon: () => h(NIcon, null, { default: () => h(CreateOutline) })
     }),
-    h(NButton, { size: 'small', type: 'success', secondary: true, round: true, disabled: row.status === 1, onClick: () => adminApi.newsStatus(row.id, 1).then(load) }, { 
+    h(NButton, { size: 'small', type: 'success', secondary: true, disabled: row.status === 1, onClick: () => toggleNewsStatus(row, 1) }, { 
       default: () => '发布',
       icon: () => h(NIcon, null, { default: () => h(SendOutline) })
     }),
-    h(NButton, { size: 'small', type: 'warning', secondary: true, round: true, disabled: row.status === 2, onClick: () => adminApi.newsStatus(row.id, 2).then(load) }, { 
+    h(NButton, { size: 'small', type: 'warning', secondary: true, disabled: row.status === 2, onClick: () => toggleNewsStatus(row, 2) }, { 
       default: () => '下架',
       icon: () => h(NIcon, null, { default: () => h(ArrowDownCircleOutline) })
     }),
-    h(NButton, { size: 'small', type: 'error', secondary: true, round: true, onClick: () => remove(row.id) }, { 
+    h(NButton, { size: 'small', type: 'error', quaternary: true, onClick: () => remove(row.id) }, { 
       default: () => '删除',
       icon: () => h(NIcon, null, { default: () => h(TrashOutline) })
     })
@@ -103,7 +142,7 @@ onMounted(() => { loadCategories(); load() })
       </n-button>
     </template>
     
-    <n-data-table :columns="columns" :data="rows" :pagination="false" :bordered="false" />
+    <n-data-table :columns="columns" :data="rows" :loading="loading" :pagination="false" :bordered="false" :scroll-x="1000" size="small" />
     
     <n-space justify="end" style="margin-top: 20px">
       <n-pagination 

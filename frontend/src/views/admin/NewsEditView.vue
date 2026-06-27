@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import { MdEditor } from 'md-editor-v3'
-import { SaveOutline, ArrowBackOutline } from '@vicons/ionicons5'
+import { SaveOutline, ArrowBackOutline, CloudUploadOutline, CreateOutline } from '@vicons/ionicons5'
 import { adminApi } from '../../api'
 import { useAuthStore } from '../../stores/auth'
 import { newsStatusOptions } from '../../utils/options'
@@ -34,11 +34,19 @@ const loadDetail = async () => {
 }
 const save = async () => {
   if (!form.title.trim()) {
-    message.warning('新闻标题不能为空')
+    message.error('新闻标题不能为空')
     return
   }
   if (!form.categoryId) {
-    message.warning('请选择新闻分类')
+    message.error('请选择新闻分类')
+    return
+  }
+  if (!form.summary || !form.summary.trim()) {
+    message.error('新闻摘要不能为空')
+    return
+  }
+  if (!form.content || !form.content.trim()) {
+    message.error('新闻正文内容不能为空')
     return
   }
   try {
@@ -46,7 +54,7 @@ const save = async () => {
     message.success('保存成功')
     router.push('/admin/news')
   } catch (error) {
-    message.error(error.message)
+    message.error(error.message || '操作失败')
   }
 }
 
@@ -54,7 +62,8 @@ const save = async () => {
 const upload = ({ file, onFinish, onError }) => {
   const data = new FormData()
   data.append('file', file.file)
-  fetch('http://localhost:8080/api/admin/upload/image', {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+  fetch(`${baseUrl}/admin/upload/image`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${auth.token}` },
     body: data
@@ -63,7 +72,7 @@ const upload = ({ file, onFinish, onError }) => {
     form.coverImage = res.data.url
     onFinish()
   }).catch((error) => {
-    message.error(error.message)
+    message.error(error.message || '图片上传失败')
     onError()
   })
 }
@@ -85,14 +94,21 @@ onMounted(() => { loadCategories(); loadDetail() })
           <n-select v-model:value="form.status" :options="newsStatusOptions" placeholder="请选择发布状态" style="border-radius: var(--radius-sm);" />
         </n-form-item-gi>
         <n-form-item-gi label="新闻封面图">
-          <n-space vertical :size="12" style="width: 100%;">
-            <n-upload :custom-request="upload" :max="1" accept=".jpg,.jpeg,.png" :show-file-list="false">
-              <n-button type="info" dashed block style="border-radius: var(--radius-sm);">上传封面图片</n-button>
-            </n-upload>
-            <div v-if="form.coverImage" style="border: 1px dashed var(--border-color); border-radius: var(--radius-sm); padding: 8px; background: #fafafa; display: inline-block; box-shadow: var(--shadow-sm);">
-              <n-image :src="assetUrl(form.coverImage)" alt="封面预览" width="200" style="border-radius: 4px; display: block;" />
+          <n-upload :custom-request="upload" :max="1" accept=".jpg,.jpeg,.png" :show-file-list="false">
+            <div class="upload-trigger-card">
+              <div v-if="!form.coverImage" class="upload-empty-box">
+                <n-icon size="28" style="color: var(--text-muted); margin-bottom: 6px;"><CloudUploadOutline /></n-icon>
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">点击上传封面图片</span>
+              </div>
+              <div v-else class="upload-preview-box">
+                <img :src="assetUrl(form.coverImage)" alt="封面预览">
+                <div class="upload-preview-overlay">
+                  <n-icon size="20" style="color: #ffffff; margin-bottom: 4px;"><CreateOutline /></n-icon>
+                  <span>更换封面</span>
+                </div>
+              </div>
             </div>
-          </n-space>
+          </n-upload>
         </n-form-item-gi>
       </n-grid>
       
@@ -121,4 +137,68 @@ onMounted(() => { loadCategories(); loadDetail() })
     </n-form>
   </n-card>
 </template>
+
+<style scoped>
+.upload-trigger-card {
+  width: 200px;
+  height: 120px;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-sm);
+  background: #fbfbfd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.upload-trigger-card:hover {
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+}
+
+.upload-empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-preview-box {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.upload-preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.upload-preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.upload-trigger-card:hover .upload-preview-overlay {
+  opacity: 1;
+}
+</style>
 

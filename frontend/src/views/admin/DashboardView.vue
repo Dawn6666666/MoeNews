@@ -10,7 +10,8 @@ import {
   PricetagsOutline,
   CheckmarkCircleOutline,
   DocumentTextOutline,
-  AlertCircleOutline
+  AlertCircleOutline,
+  GridOutline
 } from '@vicons/ionicons5'
 
 const router = useRouter()
@@ -24,37 +25,37 @@ const labels = {
     label: '用户总数', 
     unit: '人',
     icon: PeopleOutline,
-    bg: 'linear-gradient(135deg, rgba(255, 107, 139, 0.06) 0%, rgba(255, 255, 255, 0.95) 100%)',
-    borderColor: 'rgba(255, 107, 139, 0.16)',
-    iconColor: '#FF6B8B',
-    iconBg: 'rgba(255, 107, 139, 0.08)'
+    bg: '#ffffff',
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+    iconColor: '#6e6e73',
+    iconBg: '#f5f5f7'
   },
   newsCount: { 
     label: '新闻总数', 
     unit: '篇',
     icon: NewspaperOutline,
-    bg: 'linear-gradient(135deg, rgba(78, 168, 222, 0.06) 0%, rgba(255, 255, 255, 0.95) 100%)',
-    borderColor: 'rgba(78, 168, 222, 0.16)',
-    iconColor: '#4EA8DE',
-    iconBg: 'rgba(78, 168, 222, 0.08)'
+    bg: '#ffffff',
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+    iconColor: '#6e6e73',
+    iconBg: '#f5f5f7'
   },
   commentCount: { 
     label: '评论总数', 
     unit: '条',
     icon: ChatboxEllipsesOutline,
-    bg: 'linear-gradient(135deg, rgba(179, 136, 255, 0.06) 0%, rgba(255, 255, 255, 0.95) 100%)',
-    borderColor: 'rgba(179, 136, 255, 0.16)',
-    iconColor: '#B388FF',
-    iconBg: 'rgba(179, 136, 255, 0.08)'
+    bg: '#ffffff',
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+    iconColor: '#6e6e73',
+    iconBg: '#f5f5f7'
   },
   categoryCount: { 
     label: '分类总数', 
     unit: '个',
     icon: PricetagsOutline,
-    bg: 'linear-gradient(135deg, rgba(255, 209, 128, 0.06) 0%, rgba(255, 255, 255, 0.95) 100%)',
-    borderColor: 'rgba(255, 209, 128, 0.16)',
-    iconColor: '#FFD180',
-    iconBg: 'rgba(255, 209, 128, 0.08)'
+    bg: '#ffffff',
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+    iconColor: '#6e6e73',
+    iconBg: '#f5f5f7'
   }
 }
 
@@ -96,7 +97,7 @@ onMounted(() => {
           <div>
             <div style="color: var(--text-muted); font-size: 13px; font-weight: 600; margin-bottom: 4px;">{{ item.label }}</div>
             <div style="display: flex; align-items: baseline; gap: 4px;">
-              <span style="font-family: Outfit, sans-serif; font-size: 30px; font-weight: 800; color: var(--text-main); line-height: 1;">
+              <span style="font-family: var(--font-title); font-size: 30px; font-weight: 800; color: var(--text-main); line-height: 1;">
                 {{ stats[key] || 0 }}
               </span>
               <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">{{ item.unit }}</span>
@@ -110,14 +111,14 @@ onMounted(() => {
     </div>
 
     <!-- 文章状态次级卡片 -->
-    <n-card title="文章发布状态分布" style="border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);" :content-style="{ padding: '16px 24px' }">
+    <n-card title="文章发布状态分布" :bordered="false" :content-style="{ padding: '10px 16px' }">
       <n-grid cols="1 s:3" responsive="screen" :x-gap="20" :y-gap="12">
         <!-- 已发布 -->
         <n-grid-item>
           <div class="status-card border-primary">
             <div style="flex: 1; text-align: left;">
               <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 4px; font-weight: 600;">已发布文章</div>
-              <div style="font-size: 22px; font-weight: 800; color: var(--primary-color); font-family: Outfit, sans-serif; line-height: 1.1;">
+              <div style="font-size: 22px; font-weight: 800; color: var(--primary-color); font-family: var(--font-title); line-height: 1.1;">
                 {{ stats.publishedNewsCount || 0 }} <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-left: 2px;">篇</span>
               </div>
             </div>
@@ -130,7 +131,7 @@ onMounted(() => {
           <div class="status-card border-secondary">
             <div style="flex: 1; text-align: left;">
               <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 4px; font-weight: 600;">草稿箱</div>
-              <div style="font-size: 22px; font-weight: 800; color: var(--secondary-color); font-family: Outfit, sans-serif; line-height: 1.1;">
+              <div style="font-size: 22px; font-weight: 800; color: var(--secondary-color); font-family: var(--font-title); line-height: 1.1;">
                 {{ stats.draftNewsCount || 0 }} <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-left: 2px;">篇</span>
               </div>
             </div>
@@ -143,7 +144,7 @@ onMounted(() => {
           <div class="status-card border-accent">
             <div style="flex: 1; text-align: left;">
               <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 4px; font-weight: 600;">已下架文章</div>
-              <div style="font-size: 22px; font-weight: 800; color: var(--accent-color); font-family: Outfit, sans-serif; line-height: 1.1;">
+              <div style="font-size: 22px; font-weight: 800; color: var(--accent-color); font-family: var(--font-title); line-height: 1.1;">
                 {{ stats.offlineNewsCount || 0 }} <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-left: 2px;">篇</span>
               </div>
             </div>
@@ -156,29 +157,29 @@ onMounted(() => {
     <n-grid cols="1 l:3" responsive="screen" :x-gap="20" :y-gap="16">
       <!-- 快捷通道 -->
       <n-grid-item span="1">
-        <n-card title="快捷管理通道" style="height: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);" :content-style="{ padding: '16px 20px' }">
+        <n-card title="快捷管理通道" style="height: 100%;" :bordered="false" :content-style="{ padding: '12px 14px' }">
           <n-grid :cols="2" :x-gap="12" :y-gap="12">
             <n-grid-item>
               <div class="quick-link-btn btn-primary" @click="router.push('/admin/news/add')">
-                <n-icon size="24" style="margin-bottom: 6px;"><NewspaperOutline /></n-icon>
+                <n-icon size="20"><NewspaperOutline /></n-icon>
                 <span>撰写发布</span>
               </div>
             </n-grid-item>
             <n-grid-item>
               <div class="quick-link-btn btn-info" @click="router.push('/admin/news')">
-                <n-icon size="24" style="margin-bottom: 6px;"><GridOutline /></n-icon>
+                <n-icon size="20"><GridOutline /></n-icon>
                 <span>文章管理</span>
               </div>
             </n-grid-item>
             <n-grid-item>
               <div class="quick-link-btn btn-success" @click="router.push('/admin/categories')">
-                <n-icon size="24" style="margin-bottom: 6px;"><PricetagsOutline /></n-icon>
+                <n-icon size="20"><PricetagsOutline /></n-icon>
                 <span>分类维护</span>
               </div>
             </n-grid-item>
             <n-grid-item>
               <div class="quick-link-btn btn-warning" @click="router.push('/admin/comments')">
-                <n-icon size="24" style="margin-bottom: 6px;"><ChatboxEllipsesOutline /></n-icon>
+                <n-icon size="20"><ChatboxEllipsesOutline /></n-icon>
                 <span>评论审核</span>
               </div>
             </n-grid-item>
@@ -188,7 +189,7 @@ onMounted(() => {
 
       <!-- 最新发布与最新评论 -->
       <n-grid-item span="2">
-        <n-card title="系统最新动态" style="height: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);" :content-style="{ padding: '12px 20px' }">
+        <n-card title="系统最新动态" style="height: 100%;" :bordered="false" :content-style="{ padding: '8px 16px' }">
           <n-tabs type="line" animated style="margin-top: -4px;">
             <!-- 最新发布 -->
             <n-tab-pane name="news" tab="最近发布">
@@ -196,10 +197,10 @@ onMounted(() => {
                 <n-empty description="暂无发布内容" />
               </div>
               <n-list v-else style="background: transparent;">
-                <n-list-item v-for="item in newsList" :key="item.id" class="dynamic-item" style="padding: 10px 14px; margin-bottom: 8px;">
+                <n-list-item v-for="item in newsList" :key="item.id" class="dynamic-item" style="padding: 6px 12px; margin-bottom: 4px;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <n-space vertical :size="2">
-                      <a style="font-weight: 700; font-size: 14px; color: var(--text-main); cursor: pointer; transition: color 0.2s;" @click="router.push(`/admin/news/edit/${item.id}`)" class="title-link">
+                      <a style="font-weight: 700; font-size: 13px; color: var(--text-main); cursor: pointer; transition: color 0.2s; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block;" @click="router.push(`/admin/news/edit/${item.id}`)" class="title-link">
                         {{ item.title }}
                       </a>
                       <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ item.createTime }}</span>
@@ -218,9 +219,9 @@ onMounted(() => {
                 <n-empty description="暂无最新评论" />
               </div>
               <n-list v-else style="background: transparent;">
-                <n-list-item v-for="item in commentList" :key="item.id" class="dynamic-item" style="padding: 10px 14px; margin-bottom: 8px;">
+                <n-list-item v-for="item in commentList" :key="item.id" class="dynamic-item" style="padding: 6px 12px; margin-bottom: 4px;">
                   <n-space vertical :size="2">
-                    <div style="font-size: 13px; color: var(--text-main); line-height: 1.4;">
+                    <div style="font-size: 12px; color: var(--text-main); line-height: 1.4; max-width: 480px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                       <strong style="color: var(--primary-color);">{{ item.nickname }}</strong>：{{ item.content }}
                     </div>
                     <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">发表于 {{ item.createTime }}</span>
@@ -245,8 +246,8 @@ onMounted(() => {
 
 .glass-stat-card {
   padding: 18px 24px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   display: flex;
   align-items: center;
   backdrop-filter: blur(12px);
@@ -254,8 +255,8 @@ onMounted(() => {
 }
 
 .glass-stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .icon-wrapper {
@@ -265,51 +266,50 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2);
   transition: var(--transition);
 }
 
 .glass-stat-card:hover .icon-wrapper {
-  transform: scale(1.08) rotate(4deg);
+  transform: scale(1.05);
 }
 
 .status-card {
   background: #ffffff;
-  padding: 14px 20px;
-  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
   transition: var(--transition);
   position: relative;
   overflow: hidden;
 }
 
 .status-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
 }
 
 .border-primary {
-  border-left: 6px solid var(--primary-color);
+  border-left: 4px solid var(--primary-color);
 }
 .border-secondary {
-  border-left: 6px solid var(--secondary-color);
+  border-left: 4px solid var(--secondary-color);
 }
 .border-accent {
-  border-left: 6px solid var(--accent-color);
+  border-left: 4px solid var(--accent-color);
 }
 
 .status-bg-icon {
-  opacity: 0.12;
+  opacity: 0.08;
   transition: var(--transition);
 }
 
 .status-card:hover .status-bg-icon {
-  opacity: 0.2;
-  transform: scale(1.1);
+  opacity: 0.15;
+  transform: scale(1.05);
 }
 
 .text-primary {
@@ -324,11 +324,12 @@ onMounted(() => {
 
 .quick-link-btn {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  height: 96px;
-  border-radius: var(--radius-md);
+  gap: 8px;
+  height: 54px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 700;
   font-size: 13px;
@@ -336,12 +337,12 @@ onMounted(() => {
   border: 1px solid var(--border-color);
   background: #ffffff;
   color: var(--text-main);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
 .quick-link-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
 }
 
 .btn-primary:hover {

@@ -1,7 +1,6 @@
 <script setup>
-import { onMounted, onUnmounted, reactive, ref, computed } from 'vue'
+import { onMounted, reactive, ref, computed, watch } from 'vue'
 import { newsApi } from '../../api'
-import heroImage from '../../assets/hero.png'
 import { assetUrl } from '../../utils/url'
 import { HomeOutline, ChevronDownOutline, ChevronUpOutline } from '@vicons/ionicons5'
 
@@ -12,12 +11,6 @@ const pager = reactive({ page: 1, size: 8, itemCount: 0 })
 const query = reactive({ keyword: '', categoryId: null })
 
 const isCollapsed = ref(true)
-const isMobile = ref(false)
-let mediaQuery = null
-
-const handleMediaChange = (e) => {
-  isMobile.value = e.matches
-}
 
 const displayedCategories = computed(() => {
   if (!isCollapsed.value) {
@@ -59,27 +52,25 @@ const displayNews = computed(() => {
   return showHero.value ? news.value.slice(1) : news.value
 })
 
+let debounceTimer = null
+watch(() => query.keyword, () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    pager.page = 1
+    loadNews()
+  }, 300)
+})
+
 onMounted(() => {
   loadCategories()
   loadNews()
-
-  mediaQuery = window.matchMedia('(max-width: 1023px)')
-  isMobile.value = mediaQuery.matches
-  mediaQuery.addEventListener('change', handleMediaChange)
-})
-
-onUnmounted(() => {
-  if (mediaQuery) {
-    mediaQuery.removeEventListener('change', handleMediaChange)
-  }
 })
 </script>
 
 <template>
   <section class="page">
     <!-- 联合检索与分类导航一栏式面板 -->
-    <Teleport to="#header-toolbar-target" :disabled="isMobile">
-      <div class="toolbar unified-search-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 36px; padding: 12px 24px; height: auto;">
+    <div class="toolbar unified-search-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 36px; padding: 12px 24px; height: auto;">
         <!-- 左侧：分类选择胶囊（单行横向溢出滚动） -->
         <div class="category-scroll-wrapper" style="flex: 1; display: flex; align-items: center; overflow: hidden;">
           <div class="no-scrollbar-container" style="display: flex; gap: 8px; overflow-x: auto; white-space: nowrap; flex-wrap: nowrap; width: 100%; padding: 4px 0;">
@@ -91,9 +82,9 @@ onUnmounted(() => {
               @update:checked="() => { query.categoryId = null; pager.page = 1; loadNews(); }"
               class="category-pill"
               :style="{
-                borderColor: query.categoryId === null ? 'var(--primary-color)' : 'var(--border-color)',
-                backgroundColor: query.categoryId === null ? 'var(--primary-color)' : 'transparent',
-                color: query.categoryId === null ? '#ffffff' : 'var(--text-main)',
+                borderColor: query.categoryId === null ? 'var(--primary-border)' : 'var(--border-color)',
+                backgroundColor: query.categoryId === null ? 'var(--primary-light)' : 'transparent',
+                color: query.categoryId === null ? 'var(--primary-color)' : 'var(--text-main)',
                 padding: '6px 14px',
                 fontSize: '13px',
                 fontWeight: '600',
@@ -114,9 +105,9 @@ onUnmounted(() => {
               @update:checked="() => { query.categoryId = cat.value; pager.page = 1; loadNews(); }"
               class="category-pill"
               :style="{
-                borderColor: query.categoryId === cat.value ? 'var(--primary-color)' : 'var(--border-color)',
-                backgroundColor: query.categoryId === cat.value ? 'var(--primary-color)' : 'transparent',
-                color: query.categoryId === cat.value ? '#ffffff' : 'var(--text-main)',
+                borderColor: query.categoryId === cat.value ? 'var(--primary-border)' : 'var(--border-color)',
+                backgroundColor: query.categoryId === cat.value ? 'var(--primary-light)' : 'transparent',
+                color: query.categoryId === cat.value ? 'var(--primary-color)' : 'var(--text-main)',
                 padding: '6px 16px',
                 fontSize: '13px',
                 fontWeight: '600',
@@ -135,9 +126,9 @@ onUnmounted(() => {
               @click="isCollapsed = !isCollapsed"
               class="category-pill"
               :style="{
-                borderColor: 'var(--primary-color)',
+                borderColor: 'var(--border-color)',
                 backgroundColor: 'transparent',
-                color: 'var(--primary-color)',
+                color: 'var(--text-muted)',
                 padding: '6px 16px',
                 fontSize: '13px',
                 fontWeight: '700',
@@ -157,9 +148,8 @@ onUnmounted(() => {
           <n-input v-model:value="query.keyword" clearable placeholder="搜索新闻..." style="width: 200px;" @keyup.enter="pager.page = 1; loadNews()" />
           <n-button type="primary" round style="padding: 0 16px; font-weight: 700;" @click="pager.page = 1; loadNews()">搜索</n-button>
           <n-button round style="padding: 0 16px; font-weight: 600;" @click="query.keyword = ''; query.categoryId = null; pager.page = 1; loadNews()">重置</n-button>
-        </div>
       </div>
-    </Teleport>
+    </div>
 
     <!-- 精美头条焦点区 (Hero Section) -->
     <div v-if="showHero" class="slide-up-fade" style="margin-bottom: 40px;">
@@ -171,7 +161,8 @@ onUnmounted(() => {
       >
         <div class="hero-container">
           <div class="hero-cover-wrapper">
-            <img class="hero-cover-img" :src="assetUrl(featuredNews.coverImage, heroImage)" alt="头条封面">
+            <img v-if="featuredNews.coverImage" class="hero-cover-img" :src="assetUrl(featuredNews.coverImage)" alt="头条封面">
+            <div v-else class="hero-cover-placeholder"><span>MoeNews</span></div>
             <div class="hero-badge">头条资讯</div>
           </div>
           <div class="hero-content">
@@ -240,7 +231,8 @@ onUnmounted(() => {
           <!-- 如果是第一项且第一页，以横向 Bento 布局展示 -->
           <div v-if="index === 0 && pager.page === 1" class="bento-horizontal-container">
             <div class="bento-cover-wrapper">
-              <img class="bento-cover-img" :src="assetUrl(item.coverImage, heroImage)" alt="新闻封面">
+              <img v-if="item.coverImage" class="bento-cover-img" :src="assetUrl(item.coverImage)" alt="新闻封面">
+              <div v-else class="bento-cover-placeholder"><span>MoeNews</span></div>
               <div v-if="item.viewCount > 100" class="bento-badge">热门推荐</div>
               <div v-else class="bento-badge-new">精选</div>
             </div>
@@ -265,7 +257,8 @@ onUnmounted(() => {
           <!-- 否则，以常规纵向布局展示 -->
           <div v-else style="display: flex; flex-direction: column; height: 100%;">
             <div style="overflow: hidden; width: 100%; border-radius: var(--radius-md) var(--radius-md) 0 0; position: relative;">
-              <img class="news-cover" :src="assetUrl(item.coverImage, heroImage)" alt="新闻封面" style="display: block; border-radius: 0; aspect-ratio: 16/10;">
+              <img v-if="item.coverImage" class="news-cover" :src="assetUrl(item.coverImage)" alt="新闻封面" style="display: block; border-radius: 0; aspect-ratio: 16/10;">
+              <div v-else class="news-cover-placeholder"><span>MoeNews</span></div>
               <div v-if="item.viewCount > 100" class="card-badge-hot">热门</div>
               <div v-else-if="index < 3 && pager.page === 1" class="card-badge-new">最新</div>
             </div>
@@ -309,6 +302,8 @@ onUnmounted(() => {
         />
       </n-space>
     </div>
+    <!-- 回到顶部 -->
+    <n-back-top :right="40" :bottom="80" />
   </section>
 </template>
 
@@ -369,7 +364,7 @@ onUnmounted(() => {
 }
 
 .hero-title {
-  font-family: Outfit, sans-serif;
+  font-family: var(--font-title);
   font-size: clamp(22px, 2.2vw, 30px);
   font-weight: 800;
   color: var(--text-main);
@@ -451,7 +446,7 @@ onUnmounted(() => {
 }
 
 .bento-title {
-  font-family: Outfit, sans-serif;
+  font-family: var(--font-title);
   font-size: clamp(15px, 1.3vw, 19px);
   font-weight: 800;
   color: var(--text-main);
@@ -556,4 +551,45 @@ onUnmounted(() => {
   }
 }
 
+.hero-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f5f5f7 0%, #faeef1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d1d1d6;
+  font-family: var(--font-title);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.bento-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f5f5f7 0%, #faeef1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d1d1d6;
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.news-cover-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, #f5f5f7 0%, #faeef1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d1d1d6;
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
 </style>

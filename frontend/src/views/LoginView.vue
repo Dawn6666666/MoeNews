@@ -7,7 +7,7 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const message = useMessage()
 const auth = useAuthStore()
-const form = reactive({ username: 'admin', password: '123456' })
+const form = reactive({ username: '', password: '' })
 
 const submit = async () => {
   try {
@@ -31,7 +31,7 @@ const submit = async () => {
     <!-- 登录毛玻璃面板 -->
     <n-card class="auth-panel" :bordered="false" style="padding: 16px 20px;">
       <div style="text-align: center; margin-bottom: 32px;">
-        <span style="font-family: Outfit, sans-serif; font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px;">MoeNews</span>
+        <span style="font-family: var(--font-title); font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px;">MoeNews</span>
         <p style="color: var(--text-muted); font-size: 14px; margin: 8px 0 0; font-weight: 500;">欢迎回来，请登录您的账号</p>
       </div>
 

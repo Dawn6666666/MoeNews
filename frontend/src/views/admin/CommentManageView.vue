@@ -14,26 +14,70 @@ import { commentStatusOptions } from '../../utils/options'
 const message = useMessage()
 const dialog = useDialog()
 const rows = ref([])
+const loading = ref(false)
 const query = reactive({ page: 1, size: 10, keyword: '', status: null, itemCount: 0 })
 const load = async () => {
-  const data = await adminApi.comments(query)
-  rows.value = data.records
-  query.itemCount = data.total
+  loading.value = true
+  try {
+    const data = await adminApi.comments(query)
+    rows.value = data.records
+    query.itemCount = data.total
+  } catch (error) {
+    message.error(error.message || '加载评论失败')
+  } finally {
+    loading.value = false
+  }
 }
 const remove = (id) => dialog.warning({
   title: '确认删除评论',
   content: '删除采用逻辑删除，删除后前台将不再展示该评论。',
   positiveText: '删除',
   negativeText: '取消',
-  onPositiveClick: async () => { await adminApi.deleteComment(id); message.success('删除成功'); load() }
+  onPositiveClick: async () => {
+    try {
+      await adminApi.deleteComment(id)
+      message.success('删除成功')
+      load()
+    } catch (error) {
+      message.error(error.message || '删除失败')
+    }
+  }
 })
+
+const toggleStatus = (row) => {
+  const action = row.status ? '隐藏' : '显示'
+  dialog.warning({
+    title: `确认${action}评论`,
+    content: `您确定要${action}该评论吗？`,
+    positiveText: '确认',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await adminApi.commentStatus(row.id, row.status ? 0 : 1)
+        message.success(`${action}成功`)
+        load()
+      } catch (error) {
+        message.error(error.message || `${action}失败`)
+      }
+    }
+  })
+}
 
 // 格式化标签与按钮样式以匹配 Soybean Admin 柔和风格并整合微图标
 const columns = [
   { title: 'ID', key: 'id', width: 70 },
-  { title: '新闻', key: 'newsTitle' },
+  { title: '新闻', key: 'newsTitle', width: 220, ellipsis: { tooltip: true } },
   { title: '用户', key: 'nickname', width: 120 },
-  { title: '内容', key: 'content' },
+  { 
+    title: '内容', 
+    key: 'content',
+    ellipsis: { tooltip: true },
+    render: (row) => h(
+      'span',
+      { style: { color: 'var(--text-main)', fontWeight: '600' } },
+      row.content
+    )
+  },
   { 
     title: '状态', 
     key: 'status', 
@@ -44,12 +88,12 @@ const columns = [
       { default: () => row.status ? '显示' : '隐藏' }
     ) 
   },
-  { title: '操作', key: 'actions', width: 190, render: (row) => h(NSpace, null, { default: () => [
-    h(NButton, { size: 'small', type: row.status ? 'warning' : 'success', secondary: true, round: true, onClick: () => adminApi.commentStatus(row.id, row.status ? 0 : 1).then(load) }, { 
+  { title: '操作', key: 'actions', width: 190, render: (row) => h(NSpace, { size: 4 }, { default: () => [
+    h(NButton, { size: 'small', type: row.status ? 'warning' : 'success', secondary: true, onClick: () => toggleStatus(row) }, { 
       default: () => row.status ? '隐藏' : '显示',
       icon: () => h(NIcon, null, { default: () => h(row.status ? EyeOffOutline : EyeOutline) })
     }),
-    h(NButton, { size: 'small', type: 'error', secondary: true, round: true, onClick: () => remove(row.id) }, { 
+    h(NButton, { size: 'small', type: 'error', quaternary: true, onClick: () => remove(row.id) }, { 
       default: () => '删除',
       icon: () => h(NIcon, null, { default: () => h(TrashOutline) })
     })
@@ -73,7 +117,7 @@ onMounted(load)
   </div>
   
   <n-card title="评论列表" style="border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
-    <n-data-table :columns="columns" :data="rows" :pagination="false" :bordered="false" />
+    <n-data-table :columns="columns" :data="rows" :loading="loading" :pagination="false" :bordered="false" :scroll-x="1000" size="small" />
     
     <n-space justify="end" style="margin-top: 20px">
       <n-pagination 

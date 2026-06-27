@@ -1,4 +1,4 @@
-const backendOrigin = 'http://localhost:8080'
+const backendOrigin = import.meta.env.VITE_BACKEND_ORIGIN || 'http://localhost:8080'
 
 export const assetUrl = (path, fallback = '') => {
   if (!path) return fallback

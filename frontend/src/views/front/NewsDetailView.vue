@@ -6,7 +6,6 @@ import { MdPreview } from 'md-editor-v3'
 import { newsApi } from '../../api'
 import { useAuthStore } from '../../stores/auth'
 import { assetUrl } from '../../utils/url'
-import heroImage from '../../assets/hero.png'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,15 +15,29 @@ const auth = useAuthStore()
 const detail = ref({})
 const comments = ref([])
 const content = ref('')
+const loading = ref(false)
+const error = ref(null)
 const pager = reactive({ page: 1, size: 10, itemCount: 0 })
 
 const loadDetail = async () => {
-  detail.value = await newsApi.detail(route.params.id)
+  loading.value = true
+  error.value = null
+  try {
+    detail.value = await newsApi.detail(route.params.id)
+  } catch (err) {
+    error.value = err.message || '加载新闻失败'
+  } finally {
+    loading.value = false
+  }
 }
 const loadComments = async () => {
-  const data = await newsApi.comments(route.params.id, pager)
-  comments.value = data.records
-  pager.itemCount = data.total
+  try {
+    const data = await newsApi.comments(route.params.id, pager)
+    comments.value = data.records
+    pager.itemCount = data.total
+  } catch (err) {
+    message.error(err.message || '加载评论失败')
+  }
 }
 const submitComment = async () => {
   if (!auth.token) {
@@ -40,8 +53,8 @@ const submitComment = async () => {
     content.value = ''
     message.success('评论成功')
     loadComments()
-  } catch (error) {
-    message.error(error.message)
+  } catch (err) {
+    message.error(err.message || '评论失败')
   }
 }
 const remove = (id) => {
@@ -51,9 +64,13 @@ const remove = (id) => {
     positiveText: '删除',
     negativeText: '取消',
     onPositiveClick: async () => {
-      await newsApi.deleteComment(id)
-      message.success('删除成功')
-      loadComments()
+      try {
+        await newsApi.deleteComment(id)
+        message.success('删除成功')
+        loadComments()
+      } catch (err) {
+        message.error(err.message || '删除失败')
+      }
     }
   })
 }
@@ -81,32 +98,68 @@ onMounted(() => {
 
 <template>
   <section class="page" style="max-width: 860px;">
-    <!-- 详情卡片 -->
-    <n-card :bordered="false" style="border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden;">
-      <!-- 沉浸式横幅 -->
-      <div class="detail-banner">
-        <img class="detail-banner-img" :src="assetUrl(detail.coverImage, heroImage)" alt="新闻封面">
-        <div class="detail-banner-overlay">
-          <n-tag :bordered="false" type="primary" size="small" style="margin-bottom: 12px; border-radius: 6px; font-weight: 700; padding: 2px 10px;">
+    <!-- 加载状态 -->
+    <div v-if="loading" style="display: flex; justify-content: center; align-items: center; min-height: 400px; background: #ffffff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+      <n-spin size="large" description="正在加载新闻内容..." />
+    </div>
+
+    <!-- 异常或内容为空 -->
+    <div v-else-if="error || !detail.id" style="background: #ffffff; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 60px 40px; text-align: center;">
+      <n-result status="error" title="无法获取新闻内容" :description="error || '该新闻可能不存在或已被删除'">
+        <template #footer>
+          <n-button type="primary" round @click="router.push('/news')">返回新闻列表</n-button>
+        </template>
+      </n-result>
+    </div>
+
+    <!-- 详情内容 -->
+    <div v-else>
+      <!-- 优雅的返回导航 -->
+      <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+        <n-button 
+          secondary 
+          round 
+          size="medium" 
+          style="font-weight: 700; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);" 
+          @click="router.push('/news')"
+        >
+          <template #icon>
+            <span style="font-weight: 900;">&larr;</span>
+          </template>
+          返回列表
+        </n-button>
+      </div>
+
+      <!-- 详情卡片 -->
+      <n-card :bordered="false" style="border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 12px 16px;">
+        <!-- 顶部优雅大图 -->
+        <div v-if="detail.coverImage" style="width: 100%; aspect-ratio: 21 / 9; overflow: hidden; border-radius: var(--radius-md); margin-bottom: 28px;">
+          <img :src="assetUrl(detail.coverImage)" alt="封面" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+
+        <!-- 杂志化标题与元数据区域 -->
+        <div style="margin-bottom: 32px; text-align: left; padding: 0 10px;">
+          <n-tag :bordered="false" type="primary" size="small" style="border-radius: 4px; font-weight: 700; margin-bottom: 12px;">
             {{ detail.categoryName || '资讯' }}
           </n-tag>
-          <h1 class="detail-banner-title">{{ detail.title }}</h1>
-          <n-space style="color: rgba(255,255,255,0.95); font-size: 14px;" :size="16">
-            <span>发布于：{{ detail.createTime }}</span>
+          <h1 style="font-family: var(--font-title); font-size: clamp(24px, 2.5vw, 36px); font-weight: 800; color: var(--text-main); line-height: 1.25; margin: 0 0 16px;">
+            {{ detail.title }}
+          </h1>
+          <div style="display: flex; gap: 16px; color: var(--text-muted); font-size: 13px; font-weight: 500; border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding-bottom: 16px;">
+            <span>发布时间：{{ detail.createTime }}</span>
             <span>•</span>
-            <span>{{ detail.viewCount || 0 }} 次浏览</span>
-          </n-space>
+            <span>浏览次数：{{ detail.viewCount || 0 }} 次</span>
+          </div>
         </div>
-      </div>
 
-      <!-- 正文渲染 -->
-      <div style="padding: 12px 10px 20px;" class="moe-markdown">
-        <MdPreview editor-id="front-preview" :model-value="detail.content || ''" />
-      </div>
-    </n-card>
+        <!-- 正文渲染 -->
+        <div style="padding: 0 10px; max-width: 720px; margin: 0 auto;" class="moe-markdown">
+          <MdPreview editor-id="front-preview" :model-value="detail.content || ''" />
+        </div>
+      </n-card>
 
     <!-- 评论区域 -->
-    <n-card title="发表评论" style="margin-top: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+    <n-card title="发表评论" style="margin-top: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);" :bordered="false">
       <n-input
         v-model:value="content"
         type="textarea"
@@ -121,7 +174,7 @@ onMounted(() => {
       </n-space>
 
       <n-divider title-placement="left" style="margin-top: 32px;">
-        <span style="font-weight: 800; font-size: 16px; color: var(--text-main); font-family: Outfit, sans-serif;">评论列表 ({{ pager.itemCount }})</span>
+        <span style="font-weight: 800; font-size: 16px; color: var(--text-main); font-family: var(--font-title);">评论列表 ({{ pager.itemCount }})</span>
       </n-divider>
 
       <!-- 空评论状态 -->
@@ -135,7 +188,7 @@ onMounted(() => {
           v-for="item in comments"
           :key="item.id"
           class="comment-card slide-up-fade"
-          style="padding: 16px 20px; margin-bottom: 16px; border-radius: var(--radius-md); background: #ffffff;"
+          style="padding: 16px 20px; margin-bottom: 12px;"
         >
           <n-thing>
             <!-- 头像插槽 -->
@@ -191,5 +244,8 @@ onMounted(() => {
         />
       </n-space>
     </n-card>
+    </div>
+    <!-- 回到顶部 -->
+    <n-back-top :right="40" :bottom="80" />
   </section>
 </template>

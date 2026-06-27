@@ -59,7 +59,6 @@ const handleSelect = (key) => {
     <header class="front-header">
       <div class="front-nav">
         <router-link class="brand" to="/news">MoeNews</router-link>
-        <div id="header-toolbar-target"></div>
         <nav class="front-actions" aria-label="前台导航">
           <router-link class="front-link" to="/news">新闻</router-link>
           <router-link v-if="auth.user?.role === 'ADMIN'" class="front-link" to="/admin/dashboard">后台</router-link>
@@ -83,27 +82,28 @@ const handleSelect = (key) => {
       <div class="page">
         <div class="footer-grid">
           <div class="footer-col">
-            <h4 style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 22px; font-weight: 800; margin: 0 0 16px; font-family: Outfit, sans-serif; letter-spacing: -0.5px;">MoeNews</h4>
-            <p style="font-size: 14px; line-height: 1.6; margin: 0; color: var(--text-muted);">提供客观、真实、温暖的萌新趣味与实事新闻。在这里，您可以浏览新鲜资讯并发表看法。</p>
+            <h4 style="background: linear-gradient(135deg, var(--primary-color) 0%, #68bde8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 22px; font-weight: 800; margin: 0 0 16px; font-family: var(--font-title); letter-spacing: -0.5px;">MoeNews</h4>
+            <p style="font-size: 14px; line-height: 1.6; margin: 0; color: var(--text-muted);">本系统为企业级应用开发课程设计项目，基于前后端分离模式构建，旨在提供稳定、安全、优雅的资讯发布与阅读交流平台。</p>
           </div>
           <div class="footer-col">
-            <h4>快捷导航</h4>
-            <ul>
-              <li><router-link to="/news">新闻主页</router-link></li>
-              <li><router-link v-if="auth.token" to="/profile">个人中心</router-link></li>
-              <li><router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/dashboard">系统后台</router-link></li>
+            <h4>技术选型</h4>
+            <ul style="line-height: 1.8;">
+              <li>后端：Spring Boot / MyBatis-Plus</li>
+              <li>前端：Vue 3 / Vite</li>
+              <li>组件：Naive UI / Pinia</li>
             </ul>
           </div>
           <div class="footer-col">
-            <h4>服务支持</h4>
-            <ul>
-              <li>联系邮箱：contact@moenews.com</li>
-              <li>微信公众号：MoeNews趣味圈</li>
+            <h4>系统说明</h4>
+            <ul style="line-height: 1.8;">
+              <li>项目性质：课程设计系统</li>
+              <li>数据库环境：MySQL 8.0</li>
+              <li>权限机制：JWT 状态验证</li>
             </ul>
           </div>
         </div>
         <div class="footer-bottom">
-          <p style="margin: 0; color: var(--text-muted);">© 2026 MoeNews. 保留所有权利。</p>
+          <p style="margin: 0; color: var(--text-muted);">© 2026 MoeNews. 课程设计系统项目. 保留所有权利。</p>
         </div>
       </div>
     </footer>

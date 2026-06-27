@@ -18,13 +18,21 @@ const dialog = useDialog()
 const rows = ref([])
 const show = ref(false)
 const editingId = ref(null)
+const loading = ref(false)
 const query = reactive({ page: 1, size: 10, keyword: '', status: null, itemCount: 0 })
 const form = reactive({ name: '', description: '', sort: 0, status: 1 })
 
 const load = async () => {
-  const data = await adminApi.categories(query)
-  rows.value = data.records
-  query.itemCount = data.total
+  loading.value = true
+  try {
+    const data = await adminApi.categories(query)
+    rows.value = data.records
+    query.itemCount = data.total
+  } catch (error) {
+    message.error(error.message || '加载数据失败')
+  } finally {
+    loading.value = false
+  }
 }
 const open = (row) => {
   editingId.value = row?.id || null
@@ -32,13 +40,21 @@ const open = (row) => {
   show.value = true
 }
 const save = async () => {
+  if (!form.name.trim()) {
+    message.error('分类名称不能为空')
+    return
+  }
+  if (form.sort === null || form.sort === undefined || isNaN(Number(form.sort))) {
+    message.error('排序值必须是数字')
+    return
+  }
   try {
     editingId.value ? await adminApi.updateCategory(editingId.value, form) : await adminApi.createCategory(form)
     message.success('保存成功')
     show.value = false
     load()
   } catch (error) {
-    message.error(error.message)
+    message.error(error.message || '保存失败')
   }
 }
 const remove = (id) => {
@@ -48,9 +64,32 @@ const remove = (id) => {
     positiveText: '删除',
     negativeText: '取消',
     onPositiveClick: async () => {
-      await adminApi.deleteCategory(id)
-      message.success('删除成功')
-      load()
+      try {
+        await adminApi.deleteCategory(id)
+        message.success('删除成功')
+        load()
+      } catch (error) {
+        message.error(error.message || '删除失败')
+      }
+    }
+  })
+}
+
+const toggleStatus = (row) => {
+  const action = row.status ? '禁用' : '启用'
+  dialog.warning({
+    title: `确认${action}分类`,
+    content: `您确定要${action}分类“${row.name}”吗？`,
+    positiveText: '确认',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await adminApi.categoryStatus(row.id, row.status ? 0 : 1)
+        message.success(`${action}成功`)
+        load()
+      } catch (error) {
+        message.error(error.message || `${action}失败`)
+      }
     }
   })
 }
@@ -58,8 +97,8 @@ const remove = (id) => {
 // 格式化标签与按钮样式以匹配 Soybean Admin 柔和风格并整合微图标
 const columns = [
   { title: 'ID', key: 'id', width: 70 },
-  { title: '名称', key: 'name', width: 150 },
-  { title: '描述', key: 'description' },
+  { title: '名称', key: 'name', width: 150, ellipsis: { tooltip: true } },
+  { title: '描述', key: 'description', ellipsis: { tooltip: true } },
   { title: '排序值', key: 'sort', width: 90 },
   { 
     title: '状态', 
@@ -71,16 +110,16 @@ const columns = [
       { default: () => row.status ? '启用' : '禁用' }
     ) 
   },
-  { title: '操作', key: 'actions', width: 260, render: (row) => h(NSpace, null, { default: () => [
-    h(NButton, { size: 'small', type: 'primary', secondary: true, round: true, onClick: () => open(row) }, { 
+  { title: '操作', key: 'actions', width: 240, render: (row) => h(NSpace, { size: 4 }, { default: () => [
+    h(NButton, { size: 'small', type: 'primary', quaternary: true, onClick: () => open(row) }, { 
       default: () => '编辑',
       icon: () => h(NIcon, null, { default: () => h(CreateOutline) })
     }),
-    h(NButton, { size: 'small', type: row.status ? 'warning' : 'success', secondary: true, round: true, onClick: () => adminApi.categoryStatus(row.id, row.status ? 0 : 1).then(load) }, { 
+    h(NButton, { size: 'small', type: row.status ? 'warning' : 'success', secondary: true, onClick: () => toggleStatus(row) }, { 
       default: () => row.status ? '禁用' : '启用',
       icon: () => h(NIcon, null, { default: () => h(row.status ? CloseCircleOutline : CheckmarkCircleOutline) })
     }),
-    h(NButton, { size: 'small', type: 'error', secondary: true, round: true, onClick: () => remove(row.id) }, { 
+    h(NButton, { size: 'small', type: 'error', quaternary: true, onClick: () => remove(row.id) }, { 
       default: () => '删除',
       icon: () => h(NIcon, null, { default: () => h(TrashOutline) })
     })
@@ -112,7 +151,7 @@ onMounted(load)
       </n-button>
     </template>
     
-    <n-data-table :columns="columns" :data="rows" :pagination="false" :bordered="false" />
+    <n-data-table :columns="columns" :data="rows" :loading="loading" :pagination="false" :bordered="false" size="small" :scroll-x="1000" />
     
     <n-space justify="end" style="margin-top: 20px">
       <n-pagination 
